@@ -19,6 +19,8 @@ repositories {
 
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation("com.squareup.okio:okio:3.0.0")
+    implementation("com.google.code.gson:gson:2.8.9")
 }
 
 tasks.withType<KotlinCompile> {
