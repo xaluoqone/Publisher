@@ -31,7 +31,7 @@ import okio.Path.Companion.toPath
 @Composable
 @Preview
 fun App() {
-    var projectPath by remember { mutableStateOf("") }
+    var projectPath by remember { mutableStateOf("""C:\xaluoqone\UnifiedLdvRN\smart-unified-home-RN\ldv-iotapp-base-lamp""") }
     var ezmPath by remember { mutableStateOf("C:/Users/X.Nong-ext/AppData/Roaming/npm/ezm") }
     val cmdRes = remember { mutableStateListOf<String>() }
     val miniIds = remember { mutableListOf<String>() }
@@ -83,6 +83,7 @@ fun App() {
                     Button(
                         onClick = {
                             coroutineScope.launch {
+                                cmdRes.add("开始登录EZM...")
                                 execCmd(
                                     cmd = "$ezmPath login --un=b.li2@ledvance.com --pw=test12345+",
                                     execPath = projectPath,
@@ -130,16 +131,13 @@ fun App() {
                                 }
                                 return@Button
                             }
-                            coroutineScope.launch {
+                            coroutineScope.launch publish@{
                                 miniIds.forEach { miniId ->
                                     val projectPathFix =
                                         if (projectPath.last() == '\\') projectPath else """$projectPath\"""
                                     val indexFile = "${projectPathFix}index.js"
                                     val indexContent = readFile(indexFile)
-                                    cmdRes.add("获取${indexFile}内容：")
-                                    cmdRes.add(indexContent)
                                     cmdRes.add("开始修改${indexFile}")
-                                    listState.animateScrollToItem(cmdRes.lastIndex)
                                     val pathIndex = indexContent.indexOf("./src/")
                                     val pathIndexEnd = indexContent.indexOf(");")
                                     val packageName =
@@ -148,27 +146,34 @@ fun App() {
                                         indexContent.replace(packageName, miniId)
                                     writeFile(indexFile, newIndexContent)
                                     cmdRes.add("修改${indexFile}完成！")
-                                    cmdRes.add(newIndexContent)
-                                    listState.animateScrollToItem(cmdRes.lastIndex)
                                     val srcPath = """${projectPathFix}src\${packageName}"""
                                     cmdRes.add("开始修改文件夹名：${packageName}")
                                     val targetName = """${projectPathFix}src\${miniId}""".toPath().toFile()
                                     val renameRes = srcPath.toPath().toFile().renameTo(targetName)
-                                    if (renameRes) {
-                                        cmdRes.add("文件夹名已修改：${targetName.absolutePath}")
-                                        cmdRes.add("开始 publish ===================================>")
-                                        /*listState.animateScrollToItem(cmdRes.lastIndex)
-                                        execCmd(
-                                            cmd = "$ezmPath publish",
-                                            execPath = projectPath,
-                                            finishFlag = "√ 上传完成，publish结束",
-                                        ) {
-                                            *//*cmdRes.add(it)
-                                        listState.animateScrollToItem(cmdRes.lastIndex)*//*
-                                        }
-                                        cmdRes.add("√ 上传完成，${miniId} publish结束")*/
+                                    if (!renameRes) {
+                                        cmdRes.add("文件夹名修改失败！批量上传中止！")
+                                        listState.animateScrollToItem(cmdRes.lastIndex)
+                                        return@publish
                                     }
+                                    cmdRes.add("文件夹名已修改：${targetName.absolutePath}")
+                                    cmdRes.add("开始 publish ===================================>")
+                                    listState.animateScrollToItem(cmdRes.lastIndex)
+                                    execCmd(
+                                        cmd = "$ezmPath publish",
+                                        execPath = projectPath,
+                                        finishFlag = "√ 上传完成，publish结束",
+                                    ) {
+                                        if (it.isNotBlank()) {
+                                            cmdRes.add(it)
+                                            if (!listState.isScrollInProgress) {
+                                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                            }
+                                        }
+                                    }
+                                    cmdRes.add("√ 上传完成，${miniId} publish结束")
                                 }
+                                cmdRes.add("√ 批量上传完成")
+                                listState.animateScrollToItem(cmdRes.lastIndex)
                             }
                         },
                         elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
