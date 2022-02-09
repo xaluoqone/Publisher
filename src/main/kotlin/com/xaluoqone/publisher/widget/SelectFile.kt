@@ -15,10 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.xaluoqone.publisher.utils.openFileChooser
 import com.xaluoqone.publisher.utils.openFolderChooser
 
 @Composable
-fun SelectFile(path: String, onPathChange: (String) -> Unit) {
+fun SelectFile(isFolder: Boolean, path: String, onPathChange: (String) -> Unit) {
     Row(Modifier.padding(top = 5.dp).height(30.dp)) {
         Box(
             Modifier.clip(RoundedCornerShape(topStart = 5.dp, bottomStart = 5.dp))
@@ -36,14 +37,18 @@ fun SelectFile(path: String, onPathChange: (String) -> Unit) {
         }
         Button(
             onClick = {
-                openFolderChooser(onPathChange)
+                if (isFolder) {
+                    openFolderChooser(onPathChange)
+                } else {
+                    openFileChooser(onPathChange)
+                }
             },
-            Modifier.fillMaxHeight(),
+            Modifier.fillMaxHeight().defaultMinSize(100.dp),
             elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
             shape = RoundedCornerShape(topEnd = 5.dp, bottomEnd = 5.dp),
             contentPadding = PaddingValues(horizontal = 10.dp),
         ) {
-            Text("选择文件夹", fontSize = 12.sp)
+            Text(if (isFolder) "选择文件夹" else "选择文件", fontSize = 12.sp)
         }
     }
 }

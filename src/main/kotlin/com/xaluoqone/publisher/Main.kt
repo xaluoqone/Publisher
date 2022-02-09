@@ -24,31 +24,41 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.ui.Alignment
 import com.xaluoqone.publisher.utils.*
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okio.Path.Companion.toPath
 
 @Composable
 @Preview
 fun App() {
     var projectPath by remember { mutableStateOf("""C:\xaluoqone\UnifiedLdvRN\smart-unified-home-RN\ldv-iotapp-base-lamp""") }
-    var ezmPath by remember { mutableStateOf("C:/Users/X.Nong-ext/AppData/Roaming/npm/ezm") }
+    var idsTextPath by remember { mutableStateOf("""C:\xaluoqone\UnifiedLdvRN\list-test.txt""") }
     val cmdRes = remember { mutableStateListOf<String>() }
     val miniIds = remember { mutableListOf<String>() }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
+    LaunchedEffect(idsTextPath) {
+        withContext(Dispatchers.Main) {
+            cmdRes.add("正在解析文件：$idsTextPath")
+            val content = withContext(Dispatchers.IO) { readFile(idsTextPath) }
+            miniIds.addAll(content.split("\n").map { it.trimIndent() })
+            cmdRes.add(content)
+            cmdRes.add("$idsTextPath 解析完成")
+            listState.animateScrollToItem(cmdRes.lastIndex)
+        }
+    }
+
     MaterialTheme {
         Column(Modifier.padding(10.dp)) {
             Text("当前选择的小程序项目：$projectPath", fontSize = 12.sp)
-            SelectFile(projectPath) {
+            SelectFile(true, projectPath) {
                 projectPath = it
             }
             Spacer(Modifier.height(10.dp))
-            Text("ezm 路径：$ezmPath", fontSize = 12.sp)
-            SelectFile(ezmPath) {
-                ezmPath = it
-            }
+            Text("配置小程序ID文本文档路径：$idsTextPath", fontSize = 12.sp)
+            SelectFile(false, idsTextPath) { idsTextPath = it }
             Spacer(Modifier.height(10.dp))
             Text("控制台：", fontSize = 12.sp)
             Spacer(Modifier.height(5.dp))
@@ -84,42 +94,24 @@ fun App() {
                         onClick = {
                             coroutineScope.launch {
                                 cmdRes.add("开始登录EZM...")
-                                execCmd(
-                                    cmd = "$ezmPath login --un=b.li2@ledvance.com --pw=test12345+",
-                                    execPath = projectPath,
-                                    finishFlag = "√ 登录完成",
-                                ) {
-                                    cmdRes.add(it)
-                                    listState.animateScrollToItem(cmdRes.lastIndex)
+                                withContext(Dispatchers.IO) {
+                                    execCmd(
+                                        cmd = arrayOf("ezm", "login", "--un=b.li2@ledvance.com", "--pw=test12345+"),
+                                        execPath = projectPath,
+                                        finishFlag = "√ 登录完成",
+                                    ) {
+                                        cmdRes.add(it)
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(cmdRes.lastIndex)
+                                        }
+                                    }
                                 }
-                                cancel()
                             }
                         },
                         elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
                         modifier = Modifier.height(36.dp).fillMaxWidth()
                     ) {
                         Text("登录ezm", fontSize = 12.sp)
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Button(
-                        onClick = {
-                            openFileChooser { filePath ->
-                                cmdRes.add("正在解析文件：$filePath")
-                                coroutineScope.launch {
-                                    val content = readFile(filePath)
-                                    miniIds.addAll(content.split("\n").map {
-                                        it.trimIndent()
-                                    })
-                                    cmdRes.add(content)
-                                    cmdRes.add("$filePath 解析完成")
-                                    listState.animateScrollToItem(cmdRes.lastIndex)
-                                }
-                            }
-                        },
-                        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                        modifier = Modifier.height(36.dp).fillMaxWidth()
-                    ) {
-                        Text("配置文件", fontSize = 12.sp)
                     }
                     Spacer(Modifier.height(10.dp))
                     Button(
@@ -136,7 +128,7 @@ fun App() {
                                     val projectPathFix =
                                         if (projectPath.last() == '\\') projectPath else """$projectPath\"""
                                     val indexFile = "${projectPathFix}index.js"
-                                    val indexContent = readFile(indexFile)
+                                    val indexContent = withContext(Dispatchers.IO) { readFile(indexFile) }
                                     cmdRes.add("开始修改${indexFile}")
                                     val pathIndex = indexContent.indexOf("./src/")
                                     val pathIndexEnd = indexContent.indexOf(");")
@@ -144,7 +136,7 @@ fun App() {
                                         indexContent.substring(pathIndex + "./src/".length, pathIndexEnd - 1)
                                     val newIndexContent =
                                         indexContent.replace(packageName, miniId)
-                                    writeFile(indexFile, newIndexContent)
+                                    withContext(Dispatchers.IO) { writeFile(indexFile, newIndexContent) }
                                     cmdRes.add("修改${indexFile}完成！")
                                     val srcPath = """${projectPathFix}src\${packageName}"""
                                     cmdRes.add("开始修改文件夹名：${packageName}")
@@ -158,15 +150,19 @@ fun App() {
                                     cmdRes.add("文件夹名已修改：${targetName.absolutePath}")
                                     cmdRes.add("开始 publish ===================================>")
                                     listState.animateScrollToItem(cmdRes.lastIndex)
-                                    execCmd(
-                                        cmd = "$ezmPath publish",
-                                        execPath = projectPath,
-                                        finishFlag = "√ 上传完成，publish结束",
-                                    ) {
-                                        if (it.isNotBlank()) {
-                                            cmdRes.add(it)
-                                            if (!listState.isScrollInProgress) {
-                                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                    withContext(Dispatchers.IO) {
+                                        execCmd(
+                                            cmd = arrayOf("ezm", "publish"),
+                                            execPath = projectPath,
+                                            finishFlag = "√ 上传完成，publish结束",
+                                        ) {
+                                            if (it.isNotBlank()) {
+                                                cmdRes.add(it)
+                                                if (!listState.isScrollInProgress) {
+                                                    coroutineScope.launch {
+                                                        listState.animateScrollToItem(cmdRes.lastIndex)
+                                                    }
+                                                }
                                             }
                                         }
                                     }
