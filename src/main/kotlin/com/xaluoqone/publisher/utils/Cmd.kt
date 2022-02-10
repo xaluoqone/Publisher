@@ -18,13 +18,11 @@ fun execCmd(
         .start()
     val source = process.inputStream.source().buffer()
     while (true) {
-        while (true) {
-            val msg = source.easyRead()
-            callback(msg)
-            if (msg.contains(finishFlag)) {
-                break
-            }
+        val msg = source.easyRead()
+        callback(msg)
+        if (msg.contains(finishFlag)) {
+            source.close()
+            break
         }
-        break
     }
 }

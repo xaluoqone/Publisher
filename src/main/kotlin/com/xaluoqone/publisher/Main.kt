@@ -22,6 +22,7 @@ import com.xaluoqone.publisher.widget.SelectFile
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.Alignment
 import com.xaluoqone.publisher.utils.*
 import kotlinx.coroutines.Dispatchers
@@ -76,7 +77,7 @@ fun App() {
                         listState,
                     ) {
                         items(cmdRes) {
-                            Text(it, fontSize = 12.sp)
+                            SelectionContainer { Text(it, fontSize = 12.sp) }
                         }
                     }
                     if (cmdRes.isNotEmpty()) {
@@ -155,12 +156,20 @@ fun App() {
                                             cmd = arrayOf("ezm", "publish"),
                                             execPath = projectPath,
                                             finishFlag = "√ 上传完成，publish结束",
-                                        ) {
-                                            if (it.isNotBlank()) {
-                                                cmdRes.add(it)
-                                                if (!listState.isScrollInProgress) {
-                                                    coroutineScope.launch {
-                                                        listState.animateScrollToItem(cmdRes.lastIndex)
+                                        ) { result ->
+                                            if (result.isNotBlank() && !result.contains("已拷贝")) {
+                                                if (
+                                                    cmdRes.last().contains("读取业务工程文件") && result.contains("读取业务工程文件")
+                                                    || cmdRes.last().contains("压缩业务工程文件") && result.contains("压缩业务工程文件")
+                                                    || cmdRes.last().contains("上传中") && result.contains("上传中")
+                                                ) {
+                                                    cmdRes[cmdRes.lastIndex] = result
+                                                } else {
+                                                    cmdRes.add(result)
+                                                    if (!listState.isScrollInProgress) {
+                                                        coroutineScope.launch {
+                                                            listState.animateScrollToItem(cmdRes.lastIndex)
+                                                        }
                                                     }
                                                 }
                                             }
