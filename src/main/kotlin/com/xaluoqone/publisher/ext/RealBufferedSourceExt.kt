@@ -5,7 +5,7 @@ import okio.Buffer
 import okio.BufferedSource
 import java.nio.charset.Charset
 
-inline fun BufferedSource.readLine(charset: Charset = Charsets.UTF_8): String {
+fun BufferedSource.readLine(charset: Charset = Charsets.UTF_8): String {
     return when (val newline = indexOf('\n'.code.toByte())) {
         -1L -> {
             if (buffer.size != 0L) {
@@ -37,7 +37,7 @@ fun Buffer.readLine(newline: Long, charset: Charset): String {
     }
 }
 
-inline fun BufferedSource.easyRead(size: Int = 1024): String {
+fun BufferedSource.easyRead(size: Int = 1024): String {
     val array = ByteArray(size)
     var res = ""
     var read = read(array)
