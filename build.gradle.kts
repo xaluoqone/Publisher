@@ -39,6 +39,11 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Publisher"
             packageVersion = "1.0.0"
+            windows {
+                upgradeUuid = "D4E420AE-72B7-4B67-873A-FE29C423309E"
+                menuGroup = "xaluoqone"
+                iconFile.set(project.file("src/main/resources/icon.ico"))
+            }
         }
     }
 }
