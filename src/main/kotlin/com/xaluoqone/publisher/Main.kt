@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 import com.xaluoqone.publisher.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -193,7 +194,7 @@ fun App() {
 
 fun main() {
     application {
-        Window(onCloseRequest = ::exitApplication, title = "萤石小程序发布工具") {
+        Window(onCloseRequest = ::exitApplication, title = "萤石小程序发布工具", icon = painterResource("icon.ico")) {
             App()
         }
     }
