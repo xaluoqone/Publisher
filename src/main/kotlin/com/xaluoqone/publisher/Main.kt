@@ -99,13 +99,13 @@ fun App() {
                                     execCmd(
                                         cmd = arrayOf("ezm", "login", "--un=b.li2@ledvance.com", "--pw=test12345+"),
                                         execPath = projectPath,
-                                        finishFlag = "√ 登录完成",
-                                    ) {
-                                        cmdRes.add(it)
-                                        coroutineScope.launch {
-                                            listState.animateScrollToItem(cmdRes.lastIndex)
+                                        onRead = {
+                                            cmdRes.add(it)
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                            }
                                         }
-                                    }
+                                    )
                                 }
                             }
                         },
@@ -154,8 +154,7 @@ fun App() {
                                     withContext(Dispatchers.IO) {
                                         execCmd(
                                             cmd = arrayOf("ezm", "publish"),
-                                            execPath = projectPath,
-                                            finishFlag = "√ 上传完成，publish结束",
+                                            execPath = projectPath
                                         ) { result ->
                                             if (result.isNotBlank() && !result.contains("已拷贝")) {
                                                 if (
