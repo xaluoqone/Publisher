@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.xaluoqone.publisher.utils.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okio.Path.Companion.toPath
@@ -140,42 +141,53 @@ fun App() {
                                         indexContent.replace(packageName, miniId)
                                     withContext(Dispatchers.IO) { writeFile(indexFile, newIndexContent) }
                                     cmdRes.add("修改${indexFile}完成！")
-                                    val srcPath = """${projectPathFix}src\${packageName}"""
-                                    cmdRes.add("开始修改文件夹名：${packageName}")
-                                    val targetName = """${projectPathFix}src\${miniId}""".toPath().toFile()
-                                    val renameRes = srcPath.toPath().toFile().renameTo(targetName)
-                                    if (!renameRes) {
-                                        cmdRes.add("文件夹名修改失败！批量上传中止！")
+                                    val srcPath = """${projectPathFix}src""".toPath().toFile()
+                                    val srcChildren = srcPath.listFiles()
+                                    if (srcPath.isDirectory && !srcChildren.isNullOrEmpty()) {
+                                        val miniResDir = srcChildren[0]
+                                        val targetName = """${srcPath}\${miniId}""".toPath().toFile()
+                                        cmdRes.add("开始修改文件夹名：${miniResDir.name}->${targetName.name}")
+                                        val renameRes = miniResDir.renameTo(targetName)
+                                        if (!renameRes) {
+                                            cmdRes.add("文件夹名修改失败！批量上传中止！")
+                                            listState.animateScrollToItem(cmdRes.lastIndex)
+                                            return@publish
+                                        }
+                                        cmdRes.add("文件夹名修改完成！")
+                                        cmdRes.add("开始 publish ↑")
                                         listState.animateScrollToItem(cmdRes.lastIndex)
-                                        return@publish
-                                    }
-                                    cmdRes.add("文件夹名已修改：${targetName.absolutePath}")
-                                    cmdRes.add("开始 publish ===================================>")
-                                    listState.animateScrollToItem(cmdRes.lastIndex)
-                                    withContext(Dispatchers.IO) {
-                                        execCmd(
-                                            cmd = arrayOf("ezm", "publish"),
-                                            execPath = projectPath
-                                        ) { result ->
-                                            if (result.isNotBlank() && !result.contains("已拷贝")) {
-                                                if (
-                                                    cmdRes.last().contains("读取业务工程文件") && result.contains("读取业务工程文件")
-                                                    || cmdRes.last().contains("压缩业务工程文件") && result.contains("压缩业务工程文件")
-                                                    || cmdRes.last().contains("上传中") && result.contains("上传中")
-                                                ) {
-                                                    cmdRes[cmdRes.lastIndex] = result
-                                                } else {
-                                                    cmdRes.add(result)
-                                                    if (!listState.isScrollInProgress) {
-                                                        coroutineScope.launch {
-                                                            listState.animateScrollToItem(cmdRes.lastIndex)
+                                        withContext(Dispatchers.IO) {
+                                            execCmd(
+                                                cmd = arrayOf("ezm", "publish"),
+                                                execPath = projectPath
+                                            ) { result ->
+                                                if (result.isNotBlank() && !result.contains("已拷贝")) {
+                                                    if (
+                                                        cmdRes.last()
+                                                            .contains("读取业务工程文件") && result.contains("读取业务工程文件")
+                                                        || cmdRes.last()
+                                                            .contains("压缩业务工程文件") && result.contains("压缩业务工程文件")
+                                                        || cmdRes.last().contains("上传中") && result.contains("上传中")
+                                                    ) {
+                                                        cmdRes[cmdRes.lastIndex] = result
+                                                    } else {
+                                                        cmdRes.add(result)
+                                                        if (!listState.isScrollInProgress) {
+                                                            coroutineScope.launch {
+                                                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+                                    } else {
+                                        cmdRes.add("src目录为空！批量上传中止！")
+                                        listState.animateScrollToItem(cmdRes.lastIndex)
+                                        return@publish
                                     }
                                     cmdRes.add("√ 上传完成，${miniId} publish结束")
+                                    delay(1000)
                                 }
                                 cmdRes.add("√ 批量上传完成")
                                 listState.animateScrollToItem(cmdRes.lastIndex)
