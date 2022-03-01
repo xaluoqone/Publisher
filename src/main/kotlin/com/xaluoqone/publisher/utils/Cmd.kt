@@ -15,7 +15,7 @@ fun CoroutineScope.execCmd(
     val process = ProcessBuilder()
         .redirectErrorStream(true)
         .directory(execPath.toPath().toFile())
-        .command("cmd", "/c", *cmd)
+        .command(*cmd)
         .start()
     var flag = true
     val job = launch {

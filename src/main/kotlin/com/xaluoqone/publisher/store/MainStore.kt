@@ -12,7 +12,7 @@ class MainStore {
         private set
 
     private fun initialState() = MainState(
-        """C:\xaluoqone\UnifiedLdvRN\smart-unified-home-RN\ldv-iotapp-base-lamp""",
+        "/Users/feifanluo/Projects/Unified/UnifiedRN/ldv-iotapp-base-lamp",
         """C:\xaluoqone\UnifiedLdvRN\list-test.txt"""
     )
 

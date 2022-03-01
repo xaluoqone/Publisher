@@ -43,6 +43,10 @@ fun App() {
 
     LaunchedEffect(state.idsTextPath) {
         withContext(Dispatchers.Main) {
+            if (!state.idsTextPath.toPath().toFile().exists()) {
+                store.onConsoleOutputs("${state.idsTextPath}不存在！")
+                return@withContext
+            }
             store.onConsoleOutputs("正在解析文件：${state.idsTextPath}")
             store.onConsoleOutputs(store.readMiniIds())
             store.onConsoleOutputs("${state.idsTextPath} 解析完成")
