@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import com.xaluoqone.publisher.store.MainStore
 import com.xaluoqone.publisher.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -35,33 +36,29 @@ import okio.Path.Companion.toPath
 @Composable
 @Preview
 fun App() {
-    var projectPath by remember { mutableStateOf("""C:\xaluoqone\UnifiedLdvRN\smart-unified-home-RN\ldv-iotapp-base-lamp""") }
-    var idsTextPath by remember { mutableStateOf("""C:\xaluoqone\UnifiedLdvRN\list-test.txt""") }
-    val cmdRes = remember { mutableStateListOf<String>() }
-    val miniIds = remember { mutableListOf<String>() }
+    val store = remember { MainStore() }
+    val state = store.state
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(idsTextPath) {
+    LaunchedEffect(state.idsTextPath) {
         withContext(Dispatchers.Main) {
-            cmdRes.add("正在解析文件：$idsTextPath")
-            val content = withContext(Dispatchers.IO) { readFile(idsTextPath) }
-            miniIds.addAll(content.split("\n").map { it.trimIndent() })
-            cmdRes.add(content)
-            cmdRes.add("$idsTextPath 解析完成")
-            listState.animateScrollToItem(cmdRes.lastIndex)
+            store.onConsoleOutputs("正在解析文件：${state.idsTextPath}")
+            store.onConsoleOutputs(store.readMiniIds())
+            store.onConsoleOutputs("${state.idsTextPath} 解析完成")
+            listState.animateScrollToItem(state.consoleOutputs.lastIndex)
         }
     }
 
     MaterialTheme {
         Column(Modifier.padding(10.dp)) {
-            Text("当前选择的小程序项目：$projectPath", fontSize = 12.sp)
-            SelectFile(true, projectPath) {
-                projectPath = it
+            Text("当前选择的小程序项目：${state.projectPath}", fontSize = 12.sp)
+            SelectFile(true, state.projectPath) {
+                store.onChangeProjectPath(it)
             }
             Spacer(Modifier.height(10.dp))
-            Text("配置小程序ID文本文档路径：$idsTextPath", fontSize = 12.sp)
-            SelectFile(false, idsTextPath) { idsTextPath = it }
+            Text("配置小程序ID文本文档路径：${state.idsTextPath}", fontSize = 12.sp)
+            SelectFile(false, state.idsTextPath) { store.onChangeIdsTextPath(it) }
             Spacer(Modifier.height(10.dp))
             Text("控制台：", fontSize = 12.sp)
             Spacer(Modifier.height(5.dp))
@@ -78,11 +75,11 @@ fun App() {
                             .padding(5.dp),
                         listState,
                     ) {
-                        items(cmdRes) {
+                        items(state.consoleOutputs) {
                             SelectionContainer { Text(it, fontSize = 12.sp) }
                         }
                     }
-                    if (cmdRes.isNotEmpty()) {
+                    if (state.consoleOutputs.isNotEmpty()) {
                         VerticalScrollbar(
                             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = 5.dp),
                             adapter = rememberScrollbarAdapter(
@@ -96,15 +93,15 @@ fun App() {
                     Button(
                         onClick = {
                             coroutineScope.launch {
-                                cmdRes.add("开始登录EZM...")
+                                store.onConsoleOutputs("开始登录EZM...")
                                 withContext(Dispatchers.IO) {
                                     execCmd(
                                         cmd = arrayOf("ezm", "login", "--un=b.li2@ledvance.com", "--pw=test12345+"),
-                                        execPath = projectPath,
+                                        execPath = state.projectPath,
                                         onRead = {
-                                            cmdRes.add(it)
+                                            store.onConsoleOutputs(it)
                                             coroutineScope.launch {
-                                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                                listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                             }
                                         }
                                     )
@@ -119,20 +116,20 @@ fun App() {
                     Spacer(Modifier.height(10.dp))
                     Button(
                         onClick = {
-                            if (projectPath.isEmpty()) {
-                                cmdRes.add("小程序目录不能为空！")
+                            if (state.projectPath.isEmpty()) {
+                                store.onConsoleOutputs("小程序目录不能为空！")
                                 coroutineScope.launch {
-                                    listState.animateScrollToItem(cmdRes.lastIndex)
+                                    listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                 }
                                 return@Button
                             }
                             coroutineScope.launch publish@{
-                                miniIds.forEach { miniId ->
+                                state.miniIds.forEach { miniId ->
                                     val projectPathFix =
-                                        if (projectPath.last() == '\\') projectPath else """$projectPath\"""
+                                        if (state.projectPath.last() == '\\') state.projectPath else """${state.projectPath}\"""
                                     val indexFile = "${projectPathFix}index.js"
                                     val indexContent = withContext(Dispatchers.IO) { readFile(indexFile) }
-                                    cmdRes.add("开始修改${indexFile}")
+                                    store.onConsoleOutputs("开始修改${indexFile}")
                                     val pathIndex = indexContent.indexOf("./src/")
                                     val pathIndexEnd = indexContent.indexOf(");")
                                     val packageName =
@@ -140,41 +137,35 @@ fun App() {
                                     val newIndexContent =
                                         indexContent.replace(packageName, miniId)
                                     withContext(Dispatchers.IO) { writeFile(indexFile, newIndexContent) }
-                                    cmdRes.add("修改${indexFile}完成！")
+                                    store.onConsoleOutputs("修改${indexFile}完成！")
                                     val srcPath = """${projectPathFix}src""".toPath().toFile()
                                     val srcChildren = srcPath.listFiles()
                                     if (srcPath.isDirectory && !srcChildren.isNullOrEmpty()) {
                                         val miniResDir = srcChildren[0]
                                         val targetName = """${srcPath}\${miniId}""".toPath().toFile()
-                                        cmdRes.add("开始修改文件夹名：${miniResDir.name}->${targetName.name}")
+                                        store.onConsoleOutputs("开始修改文件夹名：${miniResDir.name}->${targetName.name}")
                                         val renameRes = miniResDir.renameTo(targetName)
                                         if (!renameRes) {
-                                            cmdRes.add("文件夹名修改失败！批量上传中止！")
-                                            listState.animateScrollToItem(cmdRes.lastIndex)
+                                            store.onConsoleOutputs("文件夹名修改失败！批量上传中止！")
+                                            listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                             return@publish
                                         }
-                                        cmdRes.add("文件夹名修改完成！")
-                                        cmdRes.add("开始 publish ↑")
-                                        listState.animateScrollToItem(cmdRes.lastIndex)
+                                        store.onConsoleOutputs("文件夹名修改完成！")
+                                        store.onConsoleOutputs("开始 publish ↑")
+                                        listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                         withContext(Dispatchers.IO) {
                                             execCmd(
                                                 cmd = arrayOf("ezm", "publish"),
-                                                execPath = projectPath
+                                                execPath = state.projectPath
                                             ) { result ->
                                                 if (result.isNotBlank() && !result.contains("已拷贝")) {
-                                                    if (
-                                                        cmdRes.last()
-                                                            .contains("读取业务工程文件") && result.contains("读取业务工程文件")
-                                                        || cmdRes.last()
-                                                            .contains("压缩业务工程文件") && result.contains("压缩业务工程文件")
-                                                        || cmdRes.last().contains("上传中") && result.contains("上传中")
-                                                    ) {
-                                                        cmdRes[cmdRes.lastIndex] = result
+                                                    if (store.onConsoleIsRefreshLast(result)) {
+                                                        store.onConsoleRefreshLast(result)
                                                     } else {
-                                                        cmdRes.add(result)
+                                                        store.onConsoleOutputs(result)
                                                         if (!listState.isScrollInProgress) {
                                                             coroutineScope.launch {
-                                                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                                                listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                                             }
                                                         }
                                                     }
@@ -182,15 +173,15 @@ fun App() {
                                             }
                                         }
                                     } else {
-                                        cmdRes.add("src目录为空！批量上传中止！")
-                                        listState.animateScrollToItem(cmdRes.lastIndex)
+                                        store.onConsoleOutputs("src目录为空！批量上传中止！")
+                                        listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                         return@publish
                                     }
-                                    cmdRes.add("√ 上传完成，${miniId} publish结束")
+                                    store.onConsoleOutputs("√ 上传完成，${miniId} publish结束")
                                     delay(1000)
                                 }
-                                cmdRes.add("√ 批量上传完成")
-                                listState.animateScrollToItem(cmdRes.lastIndex)
+                                store.onConsoleOutputs("√ 批量上传完成")
+                                listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                             }
                         },
                         elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
