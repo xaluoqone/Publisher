@@ -5,7 +5,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.6.10"
     id("org.jetbrains.compose") version "1.0.1"
-    id("org.openjfx.javafxplugin") version "0.0.10"
 }
 
 group = "com.xaluoqone"
@@ -21,15 +20,11 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation("com.squareup.okio:okio:3.0.0")
     implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.eclipse.platform:org.eclipse.swt:3.119.0")
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
-}
-
-javafx {
-    version = "18-ea+9"
-    modules = listOf("javafx.controls", "javafx.graphics", "javafx.fxml")
 }
 
 compose.desktop {

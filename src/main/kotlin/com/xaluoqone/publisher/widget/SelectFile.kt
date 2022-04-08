@@ -10,13 +10,13 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.xaluoqone.publisher.utils.openFileChooser
-import com.xaluoqone.publisher.utils.openFolderChooser
+import java.awt.FileDialog
 
 @Composable
 fun SelectFile(isFolder: Boolean, path: String, onPathChange: (String) -> Unit) {
@@ -37,11 +37,10 @@ fun SelectFile(isFolder: Boolean, path: String, onPathChange: (String) -> Unit) 
         }
         Button(
             onClick = {
-                if (isFolder) {
-                    openFolderChooser(onPathChange)
-                } else {
-                    openFileChooser(onPathChange)
-                }
+                val dialog = FileDialog(ComposeWindow())
+                //DirectoryDialog()
+                dialog.isVisible = true
+                println("${dialog.directory}${dialog.file}")
             },
             Modifier.fillMaxHeight().defaultMinSize(100.dp),
             elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
