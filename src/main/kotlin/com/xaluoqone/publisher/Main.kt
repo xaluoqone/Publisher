@@ -58,11 +58,17 @@ fun App() {
         Column(Modifier.padding(10.dp)) {
             Text("当前选择的小程序项目：${state.projectPath}", fontSize = 12.sp)
             SelectFile(true, state.projectPath) {
-                store.onChangeProjectPath(it)
+                if (it != null) {
+                    store.onChangeProjectPath(it)
+                }
             }
             Spacer(Modifier.height(10.dp))
             Text("配置小程序ID文本文档路径：${state.idsTextPath}", fontSize = 12.sp)
-            SelectFile(false, state.idsTextPath) { store.onChangeIdsTextPath(it) }
+            SelectFile(false, state.idsTextPath) {
+                if (it != null) {
+                    store.onChangeIdsTextPath(it)
+                }
+            }
             Spacer(Modifier.height(10.dp))
             Text("控制台：", fontSize = 12.sp)
             Spacer(Modifier.height(5.dp))
