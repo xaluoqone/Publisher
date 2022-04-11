@@ -1,4 +1,4 @@
-package com.xaluoqone.publisher.widget
+package com.xaluoqone.publisher.ui.widget
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,11 +11,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.xaluoqone.publisher.ui.theme.AppTheme
 import com.xaluoqone.publisher.utils.openFileDialog
 import kotlinx.coroutines.launch
 
@@ -34,8 +34,8 @@ fun SelectFile(
             onValueChange = onPathChange,
             modifier = Modifier.fillMaxSize()
                 .clip(RoundedCornerShape(5.dp))
-                .background(Color(0xFFCCCCCC))
-                .padding(horizontal = 10.dp)
+                .background(AppTheme.colors.background)
+                .padding(start = 10.dp, end = 40.dp)
                 .wrapContentHeight(),
             textStyle = TextStyle(fontSize = 12.sp)
         )
@@ -47,7 +47,7 @@ fun SelectFile(
             Icon(
                 painterResource(if (isFolder) "folder.svg" else "file.svg"),
                 contentDesc,
-                tint = Color.Black,
+                tint = AppTheme.colors.primary,
                 modifier = Modifier.size(18.dp)
             )
         }

@@ -8,12 +8,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.xaluoqone.publisher.widget.SelectFile
+import com.xaluoqone.publisher.ui.widget.SelectFile
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -21,6 +20,7 @@ import androidx.compose.material.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.xaluoqone.publisher.store.MainStore
+import com.xaluoqone.publisher.ui.theme.AppTheme
 import com.xaluoqone.publisher.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -49,7 +49,6 @@ fun App() {
         }
     }
 
-
     Column(Modifier.padding(10.dp)) {
         Text("当前选择的小程序项目：${state.projectPath}", fontSize = 12.sp)
         SelectFile(true, state.projectPath) {
@@ -70,7 +69,7 @@ fun App() {
         Box(
             Modifier.fillMaxSize()
                 .clip(RoundedCornerShape(5.dp))
-                .background(Color(0xFFCCCCCC))
+                .background(AppTheme.colors.background)
         ) {
             LazyColumn(
                 Modifier.fillMaxSize(),
@@ -83,7 +82,7 @@ fun App() {
             }
             Column(Modifier.fillMaxHeight().align(Alignment.CenterEnd), verticalArrangement = Arrangement.Bottom) {
                 IconButton({}) {
-                    Icon(painterResource("switch.svg"), "切换服务器")
+                    Icon(painterResource("switch.svg"), "切换服务器", tint = AppTheme.colors.primary)
                 }
                 IconButton({
                     coroutineScope.launch {
@@ -102,7 +101,7 @@ fun App() {
                         }
                     }
                 }) {
-                    Icon(painterResource("login.svg"), "登录 EZM")
+                    Icon(painterResource("login.svg"), "登录 EZM", tint = AppTheme.colors.primary)
                 }
                 IconButton({
                     if (state.projectPath.isEmpty()) {
@@ -173,12 +172,11 @@ fun App() {
                         listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                     }
                 }) {
-                    Icon(painterResource("publish.svg"), "批量发布小程序包")
+                    Icon(painterResource("publish.svg"), "批量发布小程序包", tint = AppTheme.colors.primary)
                 }
             }
         }
     }
-
 }
 
 fun main() = application {
@@ -187,7 +185,7 @@ fun main() = application {
         title = "萤石小程序发布工具",
         icon = painterResource("icon.ico")
     ) {
-        MaterialTheme {
+        AppTheme(AppTheme.Theme.Teal) {
             App()
         }
     }
