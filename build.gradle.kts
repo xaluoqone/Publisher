@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.6.10"
-    id("org.jetbrains.compose") version "1.0.1"
+    id("org.jetbrains.compose") version "1.1.1"
 }
 
 group = "com.xaluoqone"
@@ -18,9 +18,9 @@ repositories {
 
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.1")
     implementation("com.squareup.okio:okio:3.0.0")
     implementation("com.google.code.gson:gson:2.9.0")
-    implementation("org.eclipse.platform:org.eclipse.swt:3.119.0")
 }
 
 tasks.withType<KotlinCompile> {

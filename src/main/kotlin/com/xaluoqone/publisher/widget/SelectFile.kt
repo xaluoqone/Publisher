@@ -37,10 +37,13 @@ fun SelectFile(isFolder: Boolean, path: String, onPathChange: (String) -> Unit) 
         }
         Button(
             onClick = {
+                System.setProperty("apple.awt.fileDialogForDirectories", isFolder.toString())
                 val dialog = FileDialog(ComposeWindow())
-                //DirectoryDialog()
                 dialog.isVisible = true
-                println("${dialog.directory}${dialog.file}")
+                println(if (isFolder) dialog.directory else "${dialog.directory}${dialog.file}")
+                if (dialog.directory != null) {
+                    onPathChange(if (isFolder) dialog.directory else "${dialog.directory}${dialog.file}")
+                }
             },
             Modifier.fillMaxHeight().defaultMinSize(100.dp),
             elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
