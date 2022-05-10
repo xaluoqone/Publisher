@@ -45,6 +45,11 @@ fun App() {
             store.onConsoleOutputs("正在解析文件：${state.idsTextPath}")
             store.onConsoleOutputs(store.readMiniIds())
             store.onConsoleOutputs("${state.idsTextPath} 解析完成")
+        }
+    }
+
+    LaunchedEffect(state.consoleOutputs) {
+        if (state.consoleOutputs.isNotEmpty() && !listState.isScrollInProgress) {
             listState.animateScrollToItem(state.consoleOutputs.lastIndex)
         }
     }
@@ -93,9 +98,6 @@ fun App() {
                                 execPath = state.projectPath,
                                 onRead = {
                                     store.onConsoleOutputs(it)
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(state.consoleOutputs.lastIndex)
-                                    }
                                 }
                             )
                         }
@@ -106,9 +108,6 @@ fun App() {
                 IconButton({
                     if (state.projectPath.isEmpty()) {
                         store.onConsoleOutputs("小程序目录不能为空！")
-                        coroutineScope.launch {
-                            listState.animateScrollToItem(state.consoleOutputs.lastIndex)
-                        }
                         return@IconButton
                     }
                     coroutineScope.launch publish@{
@@ -135,12 +134,10 @@ fun App() {
                                 val renameRes = miniResDir.renameTo(targetName)
                                 if (!renameRes) {
                                     store.onConsoleOutputs("文件夹名修改失败！批量上传中止！")
-                                    listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                     return@publish
                                 }
                                 store.onConsoleOutputs("文件夹名修改完成！")
                                 store.onConsoleOutputs("开始 publish ↑")
-                                listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                 withContext(Dispatchers.IO) {
                                     execCmd(
                                         cmd = arrayOf("ezm", "publish"),
@@ -151,25 +148,18 @@ fun App() {
                                                 store.onConsoleRefreshLast(result)
                                             } else {
                                                 store.onConsoleOutputs(result)
-                                                if (!listState.isScrollInProgress) {
-                                                    coroutineScope.launch {
-                                                        listState.animateScrollToItem(state.consoleOutputs.lastIndex)
-                                                    }
-                                                }
                                             }
                                         }
                                     }
                                 }
                             } else {
                                 store.onConsoleOutputs("src目录为空！批量上传中止！")
-                                listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                                 return@publish
                             }
                             store.onConsoleOutputs("√ 上传完成，${miniId} publish结束")
                             delay(1000)
                         }
                         store.onConsoleOutputs("√ 批量上传完成")
-                        listState.animateScrollToItem(state.consoleOutputs.lastIndex)
                     }
                 }) {
                     Icon(painterResource("publish.svg"), "批量发布小程序包", tint = AppTheme.colors.primary)

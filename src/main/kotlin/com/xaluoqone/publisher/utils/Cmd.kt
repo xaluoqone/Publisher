@@ -2,6 +2,7 @@ package com.xaluoqone.publisher.utils
 
 import com.xaluoqone.publisher.ext.easyRead
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okio.Path.Companion.toPath
 import okio.buffer
@@ -21,6 +22,8 @@ fun CoroutineScope.execCmd(
     val job = launch {
         process.doOnExit {
             println("execCmd 执行结束")
+            // 避免在未读完控制台输出时就将流关闭
+            delay(1000)
             flag = false
             inputStream.close()
             outputStream.close()

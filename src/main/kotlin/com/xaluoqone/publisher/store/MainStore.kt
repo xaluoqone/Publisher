@@ -13,7 +13,7 @@ class MainStore {
 
     private fun initialState() = MainState(
         "/Users/feifanluo/Projects/Unified/UnifiedRN/ldv-iotapp-base-lamp",
-        """C:\xaluoqone\UnifiedLdvRN\list-test.txt"""
+        "/Users/feifanluo/Projects/win-res/UnifiedLdvRN/list.txt"
     )
 
     fun onChangeProjectPath(path: String) {
@@ -36,12 +36,21 @@ class MainStore {
         }
     }
 
-    suspend fun readMiniIds():String {
-        val content = withContext(Dispatchers.IO) { readFile(state.idsTextPath) }
+    fun onConsoleOutputs(outputs: List<String>) {
         setState {
-            copy(miniIds = content.split("\n").map { it.trimIndent() })
+            copy(consoleOutputs = consoleOutputs.toMutableList().apply {
+                addAll(outputs)
+            })
         }
-        return content
+    }
+
+    suspend fun readMiniIds(): List<String> {
+        val content = withContext(Dispatchers.IO) { readFile(state.idsTextPath) }
+        val miniIds = content.split("\n").map { it.trimIndent() }
+        setState {
+            copy(miniIds = miniIds)
+        }
+        return miniIds
     }
 
     fun onConsoleIsRefreshLast(output: String): Boolean {
