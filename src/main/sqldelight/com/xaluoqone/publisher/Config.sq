@@ -1,0 +1,16 @@
+CREATE TABLE config (
+  projectPath TEXT NOT NULL,
+  idsTextPath TEXT NOT NULL
+);
+
+selectConfig:
+SELECT * FROM config;
+
+insert:
+INSERT INTO config(projectPath,idsTextPath) VALUES (:projectPath,:idsTextPath);
+
+updateProjectPath:
+UPDATE config SET projectPath = :projectPath;
+
+updateIdsTextPath:
+UPDATE config SET projectPath = :idsTextPath;

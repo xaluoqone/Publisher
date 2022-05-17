@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.6.10"
     id("org.jetbrains.compose") version "1.1.1"
+    id("com.squareup.sqldelight") version "1.5.3"
 }
 
 group = "com.xaluoqone"
@@ -21,6 +22,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.1")
     implementation("com.squareup.okio:okio:3.1.0")
     implementation("com.google.code.gson:gson:2.9.0")
+    implementation("com.squareup.sqldelight:sqlite-driver:1.5.3")
+}
+
+sqldelight {
+    database("Database") {
+        packageName = "com.xaluoqone.publisher"
+    }
 }
 
 tasks.withType<KotlinCompile> {

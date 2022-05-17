@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import com.xaluoqone.publisher.store.MainStore
 import com.xaluoqone.publisher.ui.theme.AppTheme
 import com.xaluoqone.publisher.utils.*
@@ -35,6 +36,11 @@ fun App() {
     val state = store.state
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val database = remember {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        Database.Schema.create(driver)
+        Database(driver)
+    }
 
     LaunchedEffect(state.idsTextPath) {
         withContext(Dispatchers.Main) {
