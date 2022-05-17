@@ -28,6 +28,7 @@ dependencies {
 sqldelight {
     database("Database") {
         packageName = "com.xaluoqone.publisher"
+        dialect = "sqlite:3.24"
     }
 }
 
@@ -42,6 +43,8 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Publisher"
             packageVersion = "1.0.1"
+            modules("java.sql")
+            appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             windows {
                 upgradeUuid = "D4E420AE-72B7-4B67-873A-FE29C423309E"
                 menuGroup = "xaluoqone"

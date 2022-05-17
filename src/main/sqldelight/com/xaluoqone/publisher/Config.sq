@@ -1,4 +1,4 @@
-CREATE TABLE config (
+CREATE TABLE IF NOT EXISTS config (
   projectPath TEXT NOT NULL,
   idsTextPath TEXT NOT NULL
 );

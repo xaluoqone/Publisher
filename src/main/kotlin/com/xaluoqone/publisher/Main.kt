@@ -36,10 +36,15 @@ fun App() {
     val state = store.state
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val database = remember {
-        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        Database.Schema.create(driver)
-        Database(driver)
+    var database by remember { mutableStateOf<Database?>(null) }
+
+    LaunchedEffect(Unit) {
+        database = withContext(Dispatchers.IO) {
+            val driver =
+                JdbcSqliteDriver("jdbc:sqlite:${System.getProperty("compose.application.resources.dir")}/database.db")
+            Database.Schema.create(driver)
+            Database(driver)
+        }
     }
 
     LaunchedEffect(state.idsTextPath) {
@@ -78,14 +83,10 @@ fun App() {
         Text("控制台：", fontSize = 12.sp)
         Spacer(Modifier.height(5.dp))
         Box(
-            Modifier.fillMaxSize()
-                .clip(RoundedCornerShape(5.dp))
-                .background(AppTheme.colors.background)
+            Modifier.fillMaxSize().clip(RoundedCornerShape(5.dp)).background(AppTheme.colors.background)
         ) {
             LazyColumn(
-                Modifier.fillMaxSize(),
-                listState,
-                contentPadding = PaddingValues(5.dp)
+                Modifier.fillMaxSize(), listState, contentPadding = PaddingValues(5.dp)
             ) {
                 items(state.consoleOutputs) {
                     SelectionContainer { Text(it, fontSize = 12.sp) }
@@ -99,13 +100,11 @@ fun App() {
                     coroutineScope.launch {
                         store.onConsoleOutputs("开始登录EZM...")
                         withContext(Dispatchers.IO) {
-                            execCmd(
-                                cmd = arrayOf("ezm", "login", "--un=b.li2@ledvance.com", "--pw=test12345+"),
+                            execCmd(cmd = arrayOf("ezm", "login", "--un=b.li2@ledvance.com", "--pw=test12345+"),
                                 execPath = state.projectPath,
                                 onRead = {
                                     store.onConsoleOutputs(it)
-                                }
-                            )
+                                })
                         }
                     }
                 }) {
@@ -125,10 +124,8 @@ fun App() {
                             store.onConsoleOutputs("开始修改${indexFile}")
                             val pathIndex = indexContent.indexOf("./src/")
                             val pathIndexEnd = indexContent.indexOf(");")
-                            val packageName =
-                                indexContent.substring(pathIndex + "./src/".length, pathIndexEnd - 1)
-                            val newIndexContent =
-                                indexContent.replace(packageName, miniId)
+                            val packageName = indexContent.substring(pathIndex + "./src/".length, pathIndexEnd - 1)
+                            val newIndexContent = indexContent.replace(packageName, miniId)
                             withContext(Dispatchers.IO) { writeFile(indexFile, newIndexContent) }
                             store.onConsoleOutputs("修改${indexFile}完成！")
                             val srcPath = """${projectPathFix}src""".toPath().toFile()
@@ -146,8 +143,7 @@ fun App() {
                                 store.onConsoleOutputs("开始 publish ↑")
                                 withContext(Dispatchers.IO) {
                                     execCmd(
-                                        cmd = arrayOf("ezm", "publish"),
-                                        execPath = state.projectPath
+                                        cmd = arrayOf("ezm", "publish"), execPath = state.projectPath
                                     ) { result ->
                                         if (result.isNotBlank() && !result.contains("已拷贝")) {
                                             if (store.onConsoleIsRefreshLast(result)) {
@@ -177,9 +173,7 @@ fun App() {
 
 fun main() = application {
     Window(
-        onCloseRequest = ::exitApplication,
-        title = "萤石小程序发布工具",
-        icon = painterResource("icon.ico")
+        onCloseRequest = ::exitApplication, title = "萤石小程序发布工具", icon = painterResource("icon.ico")
     ) {
         AppTheme(AppTheme.Theme.Teal) {
             App()
