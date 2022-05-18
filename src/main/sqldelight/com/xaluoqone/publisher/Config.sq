@@ -13,4 +13,4 @@ updateProjectPath:
 UPDATE config SET projectPath = :projectPath;
 
 updateIdsTextPath:
-UPDATE config SET projectPath = :idsTextPath;
+UPDATE config SET idsTextPath = :idsTextPath;

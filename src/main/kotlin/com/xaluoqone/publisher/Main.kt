@@ -41,22 +41,33 @@ fun App() {
     LaunchedEffect(Unit) {
         database = withContext(Dispatchers.IO) {
             val driver =
+                //JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
                 JdbcSqliteDriver("jdbc:sqlite:${System.getProperty("compose.application.resources.dir")}/database.db")
             Database.Schema.create(driver)
-            Database(driver)
+            val db = Database(driver)
+            val config = db.configQueries.selectConfig().executeAsOneOrNull()
+            store.onConsoleOutputs("读取数据库配置：${config}")
+            if (config == null) {
+                db.configQueries.insert("", "")
+            } else {
+                store.onChangeIdsTextPath(config.idsTextPath)
+                store.onChangeProjectPath(config.projectPath)
+            }
+            db
         }
     }
 
     LaunchedEffect(state.idsTextPath) {
-        withContext(Dispatchers.Main) {
-            if (!state.idsTextPath.toPath().toFile().exists()) {
-                store.onConsoleOutputs("${state.idsTextPath}不存在！")
-                return@withContext
-            }
-            store.onConsoleOutputs("正在解析文件：${state.idsTextPath}")
-            store.onConsoleOutputs(store.readMiniIds())
-            store.onConsoleOutputs("${state.idsTextPath} 解析完成")
+        if (state.idsTextPath.isEmpty()) {
+            return@LaunchedEffect
         }
+        if (!state.idsTextPath.toPath().toFile().exists()) {
+            store.onConsoleOutputs("${state.idsTextPath}不存在！")
+            return@LaunchedEffect
+        }
+        store.onConsoleOutputs("正在解析文件：${state.idsTextPath}")
+        store.onConsoleOutputs(store.readMiniIds())
+        store.onConsoleOutputs("${state.idsTextPath} 解析完成")
     }
 
     LaunchedEffect(state.consoleOutputs) {
@@ -70,6 +81,7 @@ fun App() {
         SelectFile(true, state.projectPath) {
             if (it != null) {
                 store.onChangeProjectPath(it)
+                database?.configQueries?.updateProjectPath(it)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -77,6 +89,7 @@ fun App() {
         SelectFile(false, state.idsTextPath) {
             if (it != null) {
                 store.onChangeIdsTextPath(it)
+                database?.configQueries?.updateIdsTextPath(it)
             }
         }
         Spacer(Modifier.height(10.dp))

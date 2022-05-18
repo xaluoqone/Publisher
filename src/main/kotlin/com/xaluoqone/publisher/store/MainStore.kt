@@ -11,10 +11,7 @@ class MainStore {
     var state by mutableStateOf(initialState())
         private set
 
-    private fun initialState() = MainState(
-        "/Users/feifanluo/Projects/Unified/UnifiedRN/ldv-iotapp-base-lamp",
-        "/Users/feifanluo/Projects/win-res/UnifiedLdvRN/list.txt"
-    )
+    private fun initialState() = MainState()
 
     fun onChangeProjectPath(path: String) {
         setState {
@@ -55,10 +52,9 @@ class MainStore {
 
     fun onConsoleIsRefreshLast(output: String): Boolean {
         return state.consoleOutputs.last()
-            .contains("读取业务工程文件") && output.contains("读取业务工程文件")
-                || state.consoleOutputs.last()
-            .contains("压缩业务工程文件") && output.contains("压缩业务工程文件")
-                || state.consoleOutputs.last().contains("上传中") && output.contains("上传中")
+            .contains("读取业务工程文件") && output.contains("读取业务工程文件") || state.consoleOutputs.last()
+            .contains("压缩业务工程文件") && output.contains("压缩业务工程文件") || state.consoleOutputs.last()
+            .contains("上传中") && output.contains("上传中")
     }
 
     fun onConsoleRefreshLast(output: String) {
@@ -74,8 +70,8 @@ class MainStore {
     }
 
     data class MainState(
-        val projectPath: String,
-        val idsTextPath: String,
+        val projectPath: String = "",
+        val idsTextPath: String = "",
         val miniIds: List<String> = emptyList(),
         val consoleOutputs: List<String> = emptyList()
     )
